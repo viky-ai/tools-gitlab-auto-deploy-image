@@ -1,0 +1,18 @@
+variables:
+  DOCKER_DRIVER: overlay2
+  HELM_VERSION: 2.14.3
+  KUBERNETES_VERSION: 1.15.3
+  BUILD_IMAGE_NAME: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+
+stages:
+  - build
+
+build:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:stable-dind
+  script:
+    - source src/auto-deploy.sh
+    - docker_login
+    - docker_build "$BUILD_IMAGE_NAME" . --build-arg "HELM_VERSION=$HELM_VERSION" --build-arg "KUBERNETES_VERSION=$KUBERNETES_VERSION" .

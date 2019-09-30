@@ -13,6 +13,6 @@ build:
   services:
     - docker:stable-dind
   script:
-    - source src/auto-deploy.sh
-    - docker_login
-    - docker_build "$BUILD_IMAGE_NAME" . --build-arg "HELM_VERSION=$HELM_VERSION" --build-arg "KUBERNETES_VERSION=$KUBERNETES_VERSION" .
+    - docker build --pull -t "$BUILD_IMAGE_NAME" --build-arg "HELM_VERSION=$HELM_VERSION" --build-arg "KUBERNETES_VERSION=$KUBERNETES_VERSION" .
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+    - docker push "$BUILD_IMAGE_NAME"

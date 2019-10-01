@@ -63,12 +63,13 @@ function kube_config() {
     echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes"
     return 1
   fi
+  echo "Kubernetes   cluster: $(kubectl config current-context)"
 }
 
 function kube_namespace() {
   kubectl get namespace "${KUBE_NAMESPACE}" > /dev/null 2>&1 || kubectl create namespace "${KUBE_NAMESPACE}" > /dev/null
   kubectl config set-context --current --namespace="${KUBE_NAMESPACE}" > /dev/null
-  echo "Kubernetes env: $(kubectl get namespace "${KUBE_NAMESPACE}" -o name)"
+  echo "Kubernetes namespace: $(kubectl get namespace "${KUBE_NAMESPACE}" -o name)"
 }
 
 function kube_initialize_tiller() {

@@ -14,6 +14,7 @@ RUN apk --no-cache add -U \
   gzip \
   openssl \
   tar \
+  util-linux \
   vim \
   && curl -sS "https://kubernetes-helm.storage.googleapis.com/helm-v${HELM_VERSION}-linux-amd64.tar.gz" | tar zx \
   && mv linux-amd64/helm   /usr/local/bin/ \
@@ -21,8 +22,9 @@ RUN apk --no-cache add -U \
   && curl -sSL -o /usr/local/bin/kubectl "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" \
   && chmod +x /usr/local/bin/kubectl
 
-COPY entrypoint.sh /entrypoint.sh
-COPY src/ /usr/local/bin/
+COPY src/entrypoint.sh  /entrypoint.sh
+COPY src/auto-deploy.sh   /auto-deploy.sh
 
-SHELL ["/bin/bash", "-c"]
-ENTRYPOINT [ "/entrypoint.sh" ]
+SHELL ["/bin/bash", "-cl"]
+ENTRYPOINT [ "/bin/bash/", "/entrypoint.sh" ]
+CMD [ "/bin/bash", "-l" ]

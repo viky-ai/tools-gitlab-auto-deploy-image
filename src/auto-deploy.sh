@@ -5,15 +5,19 @@
 # Check tools version
 function check_version() {
 
-  echo "Docker (https://kubernetes.io)"
+  echo "Docker (https://kubernetes.io) :"
   docker --version || true
+  echo  " "
 
-  echo "Kubernetes (https://kubernetes.io)"
+  echo "Kubernetes (https://kubernetes.io) :"
   kubectl version || true
+  echo  " "
 
-  echo "Helm (https://helm.sh/)"
+  echo "Helm (https://helm.sh/) :"
   helm version || true
+  echo  " "
 }
+export -f check_version
 
 ####################################################################
 #
@@ -24,6 +28,7 @@ if [[ "${CI_ENVIRONMENT_SLUG}" == "" ]]; then
   export CI_ENVIRONMENT_SLUG="autodeploy"
 fi
 export RELEASE_NAME="${HELM_RELEASE_NAME:-$CI_ENVIRONMENT_SLUG}"
+export HELM_RELEASE_NAME="${RELEASE_NAME}"
 export KUBE_NAMESPACE="${KUBE_NAMESPACE:-$CI_ENVIRONMENT_SLUG}"
 export TILLER_NAMESPACE="${KUBE_NAMESPACE}"
 export SERVICE_ACCOUNT="${KUBE_NAMESPACE}-service-account"
@@ -40,7 +45,6 @@ export -f kube_setup
 
 # Remove all resources allocated in kubernetes (delete env)
 function kube_cleanup() {
-  kube_delete_namespace
   kube_delete_helm_release
   kube_delete_tiller
   kube_delete_resources
@@ -62,18 +66,19 @@ function kube_config() {
 }
 
 function kube_namespace() {
-  kubectl get namespace "${KUBE_NAMESPACE}" || kubectl create namespace "${KUBE_NAMESPACE}"
-  kubectl config set-context --current --namespace="${KUBE_NAMESPACE}"
+  kubectl get namespace "${KUBE_NAMESPACE}" > /dev/null 2>&1 || kubectl create namespace "${KUBE_NAMESPACE}" > /dev/null
+  kubectl config set-context --current --namespace="${KUBE_NAMESPACE}" > /dev/null
+  echo "Kubernetes env: $(kubectl get namespace "${KUBE_NAMESPACE}" -o name)"
 }
 
 function kube_initialize_tiller() {
   export TILLER_SERVICE_ACCOUNT="${TILLER_NAMESPACE}-service-account"
-  kubectl get serviceaccounts -n "${TILLER_NAMESPACE}" "${TILLER_SERVICE_ACCOUNT}" 2>1 >/dev/null || TILLER_SERVICE_ACCOUNT="default"
+  kubectl get serviceaccounts -n "${TILLER_NAMESPACE}" "${TILLER_SERVICE_ACCOUNT}" > /dev/null 2>&1 || TILLER_SERVICE_ACCOUNT="default"
 
   helm init --upgrade --wait --history-max=5 \
     --tiller-connection-timeout=30 \
     --service-account "${TILLER_SERVICE_ACCOUNT}" \
-    --tiller-namespace "${TILLER_NAMESPACE}"
+    --tiller-namespace "${TILLER_NAMESPACE}" > /dev/null
 }
 
 function kube_create_pull_secret() {
@@ -106,7 +111,14 @@ function kube_create_pull_secret() {
 }
 
 function kube_delete_helm_release() {
-  helm delete --purge --no-hooks "${RELEASE_NAME}" || true
+  HELM_ALL_NAMESPACE_RELEASE=$(helm ls -q)
+  if [[ "${HELM_ALL_NAMESPACE_RELEASE}" != "" ]]; then
+    for r in ${HELM_ALL_NAMESPACE_RELEASE} ; do
+	    helm delete --purge --no-hooks "${r}" || true
+    done
+  else
+    helm delete --purge --no-hooks "${RELEASE_NAME}" || true
+  fi
   sleep 5
 }
 
@@ -122,7 +134,7 @@ function kube_delete_resources() {
 
 function kube_delete_namespace() {
   # gitab managed kubernetes does no allow to delete namespace
-  kubectl delete namespace "${KUBE_NAMESPACE}" || true
+  kubectl delete namespace "${KUBE_NAMESPACE}" 2> /dev/null || true
 }
 
 # List all pods name matching selector in agrs
@@ -158,6 +170,12 @@ export -f kube_get_pods
 ####################################################################
 
 export DOCKER_TLS_CERTDIR=""
+if [[ "${DOCKER_HOST}" == "" ]]; then
+  # Use DooD (dooker out of doker) if dood service exist
+  if [[ "${DOOD_PORT}" != "" ]]; then
+    export DOCKER_HOST="${DOOD_PORT}"
+  fi
+fi
 
 function docker_build() {
 
@@ -237,3 +255,4 @@ function docker_login() {
     echo ""
   fi
 }
+export -f docker_login

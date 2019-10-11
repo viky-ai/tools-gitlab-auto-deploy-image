@@ -26,5 +26,5 @@ COPY src/entrypoint.sh  /entrypoint.sh
 COPY src/auto-deploy.sh   /auto-deploy.sh
 
 SHELL ["/bin/bash", "-cl"]
-ENTRYPOINT [ "/bin/bash/", "/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
 CMD [ "/bin/bash", "-l" ]

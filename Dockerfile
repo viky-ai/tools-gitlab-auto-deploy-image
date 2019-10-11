@@ -22,9 +22,9 @@ RUN apk --no-cache add -U \
   && curl -sSL -o /usr/local/bin/kubectl "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" \
   && chmod +x /usr/local/bin/kubectl
 
-COPY src/entrypoint.sh  /entrypoint.sh
+#COPY src/entrypoint.sh    /entrypoint.sh
 COPY src/auto-deploy.sh   /auto-deploy.sh
+RUN echo ". /auto-deploy.sh" > $HOME/.profile
 
-SHELL ["/bin/bash", "-cl"]
-ENTRYPOINT [ "/entrypoint.sh" ]
-CMD [ "/bin/bash", "-l" ]
+ENTRYPOINT []
+CMD [ "/bin/bash", "-e", "-l"]

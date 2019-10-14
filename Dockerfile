@@ -2,8 +2,8 @@
 #
 FROM docker:stable
 
-ARG HELM_VERSION
-ARG KUBERNETES_VERSION
+ARG HELM_VERSION=2.14.3
+ARG KUBERNETES_VERSION=1.15.3
 
 # Install Dependencies
 RUN apk --no-cache add -U \

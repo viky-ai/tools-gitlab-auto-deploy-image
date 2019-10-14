@@ -54,7 +54,7 @@ export -f kube_cleanup
 
 function kube_config() {
   if [[ "${KUBECONFIG_URL}" != "" ]]; then
-    curl -s -S -o /alternate_kubeconfig "${KUBECONFIG_URL}"
+    curl -s -S -o /alternate_kube_config "${KUBECONFIG_URL}"
     export KUBECONFIG="/alternate_kube_config"
     echo "Using KUBECONFIG=/alternate_kube_config to connect to kubernetes"
   fi

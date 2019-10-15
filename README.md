@@ -26,6 +26,8 @@ A docker image to build docker image and deploy in kubernetes with gitlab.
     build, tag and push an image according `CI_COMMIT_REF_SLUG`
   * `docker_tag_latest`
     tag and push image according `CI_COMMIT_REF_SLUG` to `latest`
+  * `docker_digest`
+    pull an image and return full image name with digest in order to pin image across deployment
   * `docker_login`
     log to gitlab registry using `CI_REGISTRY_*`
 * `check_version` : show `docker`, `kubectl` and `helm` versions

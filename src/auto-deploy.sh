@@ -56,11 +56,11 @@ function kube_config() {
   if [[ "${KUBECONFIG_URL}" != "" ]]; then
     curl -s -S -o /alternate_kube_config "${KUBECONFIG_URL}"
     export KUBECONFIG="/alternate_kube_config"
-    echo "Using KUBECONFIG=/alternate_kube_config to connect to kubernetes"
+    echo "Using KUBECONFIG=/alternate_kube_config to connect to kubernetes" > /dev/stderr
   fi
 
   if [[ "${KUBECONFIG}" == "" ]]; then
-    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes"
+    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
     return 1
   fi
   echo "Kubernetes   cluster: $(kubectl config current-context)"
@@ -90,15 +90,15 @@ function kube_create_pull_secret() {
 
   echo "Creating pull secret ..."
   if [[ "${CI_REGISTRY_USER}" == "" ]]; then
-    echo "You must set CI_REGISTRY_USER env to use kubernetes"
+    echo "You must set CI_REGISTRY_USER env to use kubernetes" > /dev/stderr
     return 1
   fi
   if [[ "${CI_REGISTRY_PASSWORD}" == "" ]]; then
-    echo "You must set CI_REGISTRY_PASSWORD env to use kubernetes"
+    echo "You must set CI_REGISTRY_PASSWORD env to use kubernetes" > /dev/stderr
     return 1
   fi
   if [[ "${GITLAB_USER_EMAIL}" == "" ]]; then
-    echo "You must set GITLAB_USER_EMAIL env to use kubernetes"
+    echo "You must set GITLAB_USER_EMAIL env to use kubernetes" > /dev/stderr
     return 1
   fi
 
@@ -142,16 +142,16 @@ function kube_delete_namespace() {
 function kube_get_pods() {
 
   if [[ "$1" == "" ]]; then
-    echo "Usage :"
-    echo "  kube_get_pods selector"
-    echo ""
-    echo " * selector is mandatory"
-    echo ""
+    echo "Usage :" > /dev/stderr
+    echo "  kube_get_pods selector" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * selector is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
     return 1
   fi
 
   if [[ "${KUBECONFIG}" == "" ]]; then
-    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes"
+    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
     return 2
   fi
 
@@ -181,16 +181,16 @@ fi
 function docker_build() {
 
   if [[ "$1" == "" ]]; then
-    echo "Usage :"
-    echo "  docker_build image_name [build_dir] [build_args]"
-    echo ""
-    echo " * image_name is mandatory"
-    echo ""
+    echo "Usage :" > /dev/stderr
+    echo "  docker_build image_name [build_dir] [build_args]" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * image_name is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
     return 1
   fi
 
   if [[ "${DOCKER_HOST}" == "" ]]; then
-    echo "DOCKER_HOST en must be set to use docker."
+    echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
     return 2
   fi
 
@@ -214,19 +214,21 @@ function docker_build() {
 }
 export -f docker_build
 
-function docker_tag_latest() {
+# Return the full qualified digest for image pining
+# https://success.docker.com/article/images-tagging-vs-digests
+function docker_digest() {
 
   if [[ "$1" == "" ]]; then
-    echo "Usage :"
-    echo "  docker_tag_latest image_name"
-    echo ""
-    echo " * image_name is mandatory"
-    echo ""
+    echo "Usage :" > /dev/stderr
+    echo "  docker_gigest image_name" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * image_name is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
     return 1
   fi
 
   if [[ "${DOCKER_HOST}" == "" ]]; then
-    echo "DOCKER_HOST en must be set to use docker."
+    echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
     return 2
   fi
 
@@ -234,11 +236,42 @@ function docker_tag_latest() {
   docker_login
 
   local CI_DOCKER_IMAGE="$1"
+
+  echo "Pulling ${CI_DOCKER_IMAGE} ..." > /dev/stderr
+  local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
+  echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE" > /dev/stderr
+
+  local DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${CI_DOCKER_IMAGE}")
+  local DIGEST_TAG=$(echo "${DIGEST}" | cut -d'@' -f2)
+  echo "${CI_DOCKER_IMAGE_FULL}@${DIGEST_TAG}"
+}
+export -f docker_digest
+
+function docker_tag_latest() {
+
+  if [[ "$1" == "" ]]; then
+    echo "Usage :" > /dev/stderr
+    echo "  docker_tag_latest image_name" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * image_name is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
+    return 1
+  fi
+
+  if [[ "${DOCKER_HOST}" == "" ]]; then
+    echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
+    return 2
+  fi
+
+  # login to private registry
+  docker_login
+
   local CI_DOCKER_IMAGE="$1:${CI_COMMIT_REF_SLUG:-latest}"
   local CI_DOCKER_IMAGE_LATEST="$1:latest"
 
-  echo "Pulling ${CI_DOCKER_IMAGE}"
-  docker pull ${CI_DOCKER_IMAGE}
+  echo "Pulling ${CI_DOCKER_IMAGE} ..."
+  local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
+  echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE"
 
   echo "Taggging ${CI_DOCKER_IMAGE} to ${CI_DOCKER_IMAGE_LATEST}"
   docker tag ${CI_DOCKER_IMAGE} ${CI_DOCKER_IMAGE_LATEST}
@@ -251,9 +284,9 @@ export -f docker_tag_latest
 
 function docker_login() {
   if [[ -n "$CI_REGISTRY_USER" ]]; then
-    echo "Logging to GitLab Container Registry with CI credentials ..."
-    echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
-    echo ""
+    echo "Logging to GitLab Container Registry with CI credentials ..." > /dev/stderr
+    echo "${CI_DEPLOY_PASSWORD:-$CI_REGISTRY_PASSWORD}" | docker login --username "${CI_DEPLOY_USER:-$CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}" > /dev/stderr
+    echo "" > /dev/stderr
   fi
 }
 export -f docker_login

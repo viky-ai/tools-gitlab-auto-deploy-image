@@ -286,7 +286,7 @@ export -f docker_tag_latest
 function docker_login() {
   if [[ -n "$CI_REGISTRY_USER" ]]; then
     echo "Logging to GitLab Container Registry with CI credentials ..." > /dev/stderr
-    echo "${CI_DEPLOY_PASSWORD:-$CI_REGISTRY_PASSWORD}" | docker login --username "${CI_DEPLOY_USER:-$CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}" > /dev/stderr
+    echo "${$CI_REGISTRY_PASSWORD}" | docker login --username "${$CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}" > /dev/stderr
     echo "" > /dev/stderr
   fi
 }

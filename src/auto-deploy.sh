@@ -214,9 +214,9 @@ function docker_build() {
 }
 export -f docker_build
 
-# Return the full qualified digest for image pining
-# https://success.docker.com/article/images-tagging-vs-digests
-function docker_digest() {
+# Return the full qualified digest tag for image pining
+# https://github.com/helm/charts/issues/13449 : Option B
+function docker_digest_tag() {
 
   if [[ "$1" == "" ]]; then
     echo "Usage :" > /dev/stderr
@@ -240,12 +240,13 @@ function docker_digest() {
   echo "Pulling ${CI_DOCKER_IMAGE} ..." > /dev/stderr
   local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
   echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE" > /dev/stderr
+  local IMAGE_TAG=$(echo "${CI_DOCKER_IMAGE_FULL}" | cut -d':' -f2)
 
   local DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${CI_DOCKER_IMAGE}")
   local DIGEST_TAG=$(echo "${DIGEST}" | cut -d'@' -f2)
-  echo "${CI_DOCKER_IMAGE_FULL}@${DIGEST_TAG}"
+  echo "${IMAGE_TAG}@${DIGEST_TAG}"
 }
-export -f docker_digest
+export -f docker_digest_tag
 
 function docker_tag_latest() {
 

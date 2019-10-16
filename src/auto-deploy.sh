@@ -48,7 +48,7 @@ function kube_cleanup() {
   kube_delete_helm_release
   kube_delete_tiller
   kube_delete_resources
-  kube_delete_namespace
+  #kube_delete_namespace
 }
 export -f kube_cleanup
 

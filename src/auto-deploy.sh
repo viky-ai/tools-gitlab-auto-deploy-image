@@ -305,7 +305,7 @@ function docker_login() {
 export -f docker_login
 
 
-function pull_from_gitlab_container_to_dockerhub() {
+function docker_push_gitlab_to_dockerhub() {
     # $1 = gitlab registry to be pulled
     # $2 = dockerhub image to be pushed
     
@@ -321,4 +321,4 @@ function pull_from_gitlab_container_to_dockerhub() {
         echo "Please provide the Source Gitlab registry Image"
     fi
 }
-export -f pull_from_gitlab_container_to_dockerhub
+export -f docker_push_gitlab_to_dockerhub

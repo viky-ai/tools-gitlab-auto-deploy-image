@@ -312,7 +312,7 @@ function docker_push_gitlab_to_dockerhub() {
     if [[ -n "$1" ]]; then
         if [[ -n "$2" ]]; then
             docker pull $1
-            docker $1 $2
+            docker tag $1 $2
             docker push $2
         else
             echo "Please provide the Destination Dockerhub image "

@@ -311,11 +311,18 @@ function docker_push_gitlab_to_dockerhub() {
     
     if [[ -n "$1" ]]; then
         if [[ -n "$2" ]]; then
+            # Login to Gitlab registry and dockerhub
+            docker_login
+            docker_gitlab_login
+            
+            # Pull from Gitlab
             docker pull $1
+            # Tag to Dockerhub
             docker tag $1 $2
+            # Push to Dockerhub
             docker push $2
         else
-            echo "Please provide the Destination Dockerhub image "
+            echo "Please provide the Destination Dockerhub image"
         fi
     else
         echo "Please provide the Source Gitlab registry Image"

@@ -10,6 +10,7 @@ RUN apk --no-cache add -U \
   bash \
   ca-certificates \
   curl \
+  gettext \
   git\
   gzip \
   openssl \

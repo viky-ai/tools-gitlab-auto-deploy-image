@@ -129,7 +129,7 @@ function kube_delete_tiller() {
 }
 
 function kube_delete_resources() {
-    kubectl delete all,cm,pvc,pdb --ignore-not-found --namespace "${KUBE_NAMESPACE}" --all || true
+    kubectl delete all,cm,pvc,pdb,ing --ignore-not-found --namespace "${KUBE_NAMESPACE}" --all || true
     kubectl delete secret --ignore-not-found --namespace "${KUBE_NAMESPACE}" gitlab-registry || true
 }
 

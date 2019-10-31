@@ -40,6 +40,7 @@ A docker image to build docker image and deploy in kubernetes with gitlab.
     - `second parameter`
       This Docker image to push to dockerhub ex: `organization/repository:tag`
 - `check_version` : show `docker`, `kubectl` and `helm` versions
+- `notify_deployment` : notify deployment to grafana monitoring service
 
 ## Usage
 

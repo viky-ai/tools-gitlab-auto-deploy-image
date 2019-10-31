@@ -1,4 +1,4 @@
-# docker build --build-arg "HELM_VERSION=2.14.3" --build-arg "KUBERNETES_VERSION=1.15.3" -t vikyai/tools-gitlab-auto-deploy-image .
+# docker build --pull -t vikyai/tools-gitlab-auto-deploy-image .
 #
 FROM docker:stable
 

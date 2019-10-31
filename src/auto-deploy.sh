@@ -4,15 +4,15 @@
 
 # Check tools version
 function check_version() {
-    
+
     echo "Docker (https://kubernetes.io) :"
     docker --version || true
     echo  " "
-    
+
     echo "Kubernetes (https://kubernetes.io) :"
     kubectl version || true
     echo  " "
-    
+
     echo "Helm (https://helm.sh/) :"
     helm version || true
     echo  " "
@@ -32,6 +32,7 @@ export HELM_RELEASE_NAME="${RELEASE_NAME}"
 export KUBE_NAMESPACE="${KUBE_NAMESPACE:-$CI_ENVIRONMENT_SLUG}"
 export TILLER_NAMESPACE="${KUBE_NAMESPACE}"
 export SERVICE_ACCOUNT="${KUBE_NAMESPACE}-service-account"
+export DEPLOY_START_TIME=`date +%s000`
 
 # Setup all resources to use kubernetes
 function kube_setup() {
@@ -58,7 +59,7 @@ function kube_config() {
         export KUBECONFIG="/alternate_kube_config"
         echo "Using KUBECONFIG=/alternate_kube_config to connect to kubernetes" > /dev/stderr
     fi
-    
+
     if [[ "${KUBECONFIG}" == "" ]]; then
         echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
         return 1
@@ -75,7 +76,7 @@ function kube_namespace() {
 function kube_initialize_tiller() {
     export TILLER_SERVICE_ACCOUNT="${TILLER_NAMESPACE}-service-account"
     kubectl get serviceaccounts -n "${TILLER_NAMESPACE}" "${TILLER_SERVICE_ACCOUNT}" > /dev/null 2>&1 || TILLER_SERVICE_ACCOUNT="default"
-    
+
     helm init --upgrade --wait --history-max=5 \
     --tiller-connection-timeout=30 \
     --service-account "${TILLER_SERVICE_ACCOUNT}" \
@@ -83,11 +84,11 @@ function kube_initialize_tiller() {
 }
 
 function kube_create_pull_secret() {
-    
+
     if [[ "$CI_PROJECT_VISIBILITY" == "public" ]]; then
         return
     fi
-    
+
     echo "Creating pull secret ..."
     if [[ "${CI_REGISTRY_USER}" == "" ]]; then
         echo "You must set CI_REGISTRY_USER env to use kubernetes" > /dev/stderr
@@ -101,7 +102,7 @@ function kube_create_pull_secret() {
         echo "You must set GITLAB_USER_EMAIL env to use kubernetes" > /dev/stderr
         return 1
     fi
-    
+
     kubectl create secret -n "${KUBE_NAMESPACE}" \
     docker-registry gitlab-registry \
     --docker-server="${CI_REGISTRY}" \
@@ -140,7 +141,7 @@ function kube_delete_namespace() {
 
 # List all pods name matching selector in agrs
 function kube_get_pods() {
-    
+
     if [[ "$1" == "" ]]; then
         echo "Usage :" > /dev/stderr
         echo "  kube_get_pods selector" > /dev/stderr
@@ -149,12 +150,12 @@ function kube_get_pods() {
         echo "" > /dev/stderr
         return 1
     fi
-    
+
     if [[ "${KUBECONFIG}" == "" ]]; then
         echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
         return 2
     fi
-    
+
     local KUBE_SELECTOR="$1"
     kubectl get pods --namespace="${KUBE_NAMESPACE}" \
     -l "${KUBE_SELECTOR}" \
@@ -179,7 +180,7 @@ if [[ "${DOCKER_HOST}" == "" ]]; then
 fi
 
 function docker_build() {
-    
+
     if [[ "$1" == "" ]]; then
         echo "Usage :" > /dev/stderr
         echo "  docker_build image_name [build_dir] [build_args]" > /dev/stderr
@@ -188,28 +189,28 @@ function docker_build() {
         echo "" > /dev/stderr
         return 1
     fi
-    
+
     if [[ "${DOCKER_HOST}" == "" ]]; then
         echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
         return 2
     fi
-    
+
     # login to private registry
     docker_gitlab_login
-    
+
     local TIMESTAMP=$(date +%Y%m%d%H%M%S)
     local CI_DOCKER_IMAGE="$1:${CI_COMMIT_REF_SLUG:-$TIMESTAMP}"
     local CI_DOCKER_DIR="${2:-.}"
     local CI_DOCKER_IMAGE_BUILD_OPT="$3"
-    
+
     echo ""
     echo "Build docker image ${CI_DOCKER_IMAGE} from dir ${CI_DOCKER_DIR} ..."
     docker build --pull ${CI_DOCKER_IMAGE_BUILD_OPT} -t ${CI_DOCKER_IMAGE} ${CI_DOCKER_DIR}
-    
+
     echo ""
     echo "Pushing ${CI_DOCKER_IMAGE} to GitLab Container Registry ..."
     docker push ${CI_DOCKER_IMAGE}
-    
+
     echo ""
 }
 export -f docker_build
@@ -217,7 +218,7 @@ export -f docker_build
 # Return the full qualified digest tag for image pining
 # https://github.com/helm/charts/issues/13449 : Option B
 function docker_digest_tag() {
-    
+
     if [[ "$1" == "" ]]; then
         echo "Usage :" > /dev/stderr
         echo "  docker_gigest image_name" > /dev/stderr
@@ -226,22 +227,22 @@ function docker_digest_tag() {
         echo "" > /dev/stderr
         return 1
     fi
-    
+
     if [[ "${DOCKER_HOST}" == "" ]]; then
         echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
         return 2
     fi
-    
+
     # login to private registry
     docker_gitlab_login
-    
+
     local CI_DOCKER_IMAGE="$1"
-    
+
     echo "Pulling ${CI_DOCKER_IMAGE} ..." > /dev/stderr
     local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
     echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE" > /dev/stderr
     local IMAGE_TAG=$(echo "${CI_DOCKER_IMAGE_FULL}" | cut -d':' -f2)
-    
+
     local DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${CI_DOCKER_IMAGE}")
     local DIGEST_TAG=$(echo "${DIGEST}" | cut -d'@' -f2)
     echo "${IMAGE_TAG}@${DIGEST_TAG}"
@@ -249,7 +250,7 @@ function docker_digest_tag() {
 export -f docker_digest_tag
 
 function docker_tag_latest() {
-    
+
     if [[ "$1" == "" ]]; then
         echo "Usage :" > /dev/stderr
         echo "  docker_tag_latest image_name" > /dev/stderr
@@ -258,25 +259,25 @@ function docker_tag_latest() {
         echo "" > /dev/stderr
         return 1
     fi
-    
+
     if [[ "${DOCKER_HOST}" == "" ]]; then
         echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
         return 2
     fi
-    
+
     # login to private registry
     docker_gitlab_login
-    
+
     local CI_DOCKER_IMAGE="$1:${CI_COMMIT_REF_SLUG:-latest}"
     local CI_DOCKER_IMAGE_LATEST="$1:latest"
-    
+
     echo "Pulling ${CI_DOCKER_IMAGE} ..."
     local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
     echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE"
-    
+
     echo "Taggging ${CI_DOCKER_IMAGE} to ${CI_DOCKER_IMAGE_LATEST}"
     docker tag ${CI_DOCKER_IMAGE} ${CI_DOCKER_IMAGE_LATEST}
-    
+
     echo "Pushing ${CI_DOCKER_IMAGE_LATEST} to registry ..."
     docker push ${CI_DOCKER_IMAGE_LATEST}
     echo ""
@@ -308,13 +309,13 @@ export -f docker_login
 function docker_push_gitlab_to_dockerhub() {
     # $1 = gitlab registry to be pulled
     # $2 = dockerhub image to be pushed
-    
+
     if [[ -n "$1" ]]; then
         if [[ -n "$2" ]]; then
             # Login to Gitlab registry and dockerhub
             docker_login
             docker_gitlab_login
-            
+
             # Pull from Gitlab
             docker pull $1
             # Tag to Dockerhub
@@ -329,3 +330,19 @@ function docker_push_gitlab_to_dockerhub() {
     fi
 }
 export -f docker_push_gitlab_to_dockerhub
+
+function notify_deployment()
+{
+  if [ "${GRAFANA_URL}" == "" ];   then return 0; fi
+  if [ "${GRAFANA_TOKEN}" == "" ]; then return 0; fi
+
+  END_TIME=`date +%s000`
+  URL="${GRAFANA_URL}api/annotations"
+  DATA="{ \"text\": \"Deploy ${CI_COMMIT_SHORT_SHA}\", \"tags\": [\"deploy\"], \"time\": ${DEPLOY_START_TIME}, \"timeEnd\": ${END_TIME} }"
+  curl -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${GRAFANA_TOKEN}" \
+    "${URL}" \
+    -d "${DATA}"
+}
+export -f notify_deployment

@@ -339,7 +339,8 @@ function notify_deployment()
   END_TIME=`date +%s000`
   URL="${GRAFANA_URL}api/annotations"
   DATA="{ \"text\": \"Deploy ${CI_COMMIT_SHORT_SHA}\", \"tags\": [\"deploy\"], \"time\": ${DEPLOY_START_TIME}, \"timeEnd\": ${END_TIME} }"
-  curl -X POST \
+  curl --silent --show-error \
+    -X POST \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${GRAFANA_TOKEN}" \
     "${URL}" \

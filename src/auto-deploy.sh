@@ -309,25 +309,38 @@ export -f docker_login
 function docker_push_gitlab_to_dockerhub() {
     # $1 = gitlab registry to be pulled
     # $2 = dockerhub image to be pushed
-
-    if [[ -n "$1" ]]; then
-        if [[ -n "$2" ]]; then
-            # Login to Gitlab registry and dockerhub
-            docker_login
-            docker_gitlab_login
-
-            # Pull from Gitlab
-            docker pull $1
-            # Tag to Dockerhub
-            docker tag $1 $2
-            # Push to Dockerhub
-            docker push $2
-        else
-            echo "Please provide the Destination Dockerhub image"
-        fi
-    else
-        echo "Please provide the Source Gitlab registry Image"
+    if [[ "$1" == "" ]]; then
+        echo "Usage :" > /dev/stderr
+        echo "  docker_push_gitlab_to_dockerhub gitlab_image dockerhub_image" > /dev/stderr
+        echo "" > /dev/stderr
+        echo " * gitlab_image to be pulled is mandatory" > /dev/stderr
+        echo "" > /dev/stderr
+        return 1
     fi
+
+    if [[ "$2" == "" ]]; then
+        echo "Usage :" > /dev/stderr
+        echo "  docker_push_gitlab_to_dockerhub gitlab_image dockerhub_image" > /dev/stderr
+        echo "" > /dev/stderr
+        echo " * dockerhub_image to be pushed is mandatory" > /dev/stderr
+        echo "" > /dev/stderr
+        return 1
+    fi
+
+    local GITLAB_IMAGE="$1"
+    local DOCKERHUB_IMAGE="$2"
+
+    # Login to Gitlab registry and dockerhub
+    docker_login
+    docker_gitlab_login
+
+    # Pull from Gitlab
+    docker pull "${GITLAB_IMAGE}"
+    # Tag to Dockerhub
+    docker tag "${GITLAB_IMAGE}" "${DOCKERHUB_IMAGE}"
+    # Push to Dockerhub
+    docker push "${DOCKERHUB_IMAGE}"
+
 }
 export -f docker_push_gitlab_to_dockerhub
 

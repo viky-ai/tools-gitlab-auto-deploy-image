@@ -240,6 +240,10 @@ function docker_digest_tag() {
 
     echo "Pulling ${CI_DOCKER_IMAGE} ..." > /dev/stderr
     local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")
+    if [[ "${CI_DOCKER_IMAGE_FULL}" == "" ]]; then
+      echo "Unable to pull image : ${CI_DOCKER_IMAGE}" > /dev/stderr
+      return 2
+    fi
     echo "Pulling ${CI_DOCKER_IMAGE_FULL} DONE" > /dev/stderr
     local IMAGE_TAG=$(echo "${CI_DOCKER_IMAGE_FULL}" | cut -d':' -f2)
 

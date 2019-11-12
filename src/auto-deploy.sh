@@ -64,7 +64,13 @@ function kube_config() {
         echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
         return 1
     fi
-    echo "Kubernetes   cluster: $(kubectl config current-context)"
+
+    local KUBE_CONTEXT=$(kubectl config current-context)
+    if [[ "${KUBE_CONTEXT}" == "" ]]; then
+        echo "Unable to use ${KUBECONFIG} : kubectl config current-context failed" > /dev/stderr
+        return 1
+    fi
+    echo "Kubernetes   cluster: ${KUBE_CONTEXT}"
 }
 
 function kube_namespace() {

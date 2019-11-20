@@ -1,7 +1,5 @@
 variables:
   DOCKER_DRIVER: overlay2
-  HELM_VERSION: 2.14.3
-  KUBERNETES_VERSION: 1.15.3
   BUILD_IMAGE_NAME: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
 
 stages:
@@ -13,6 +11,6 @@ build:
   services:
     - docker:stable-dind
   script:
-    - docker build --pull -t "$BUILD_IMAGE_NAME" --build-arg "HELM_VERSION=$HELM_VERSION" --build-arg "KUBERNETES_VERSION=$KUBERNETES_VERSION" .
+    - docker build --pull -t "$BUILD_IMAGE_NAME" .
     - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
     - docker push "$BUILD_IMAGE_NAME"

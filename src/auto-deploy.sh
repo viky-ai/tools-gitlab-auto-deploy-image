@@ -64,7 +64,7 @@ function kube_config() {
 
   if [ "${KUBECONFIG}" == "" ]
   then
-    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
+    echo "You must set KUBECONFIG or KUBECONFIG_URL env to use kubernetes" > /dev/stderr
     return 1
   fi
 
@@ -169,7 +169,7 @@ function kube_get_pods() {
 
   if [ "${KUBECONFIG}" == "" ]
   then
-    echo "You must set KUBECONFIG or KUBE_CONFIG_URL env to use kubernetes" > /dev/stderr
+    echo "You must set KUBECONFIG or KUBECONFIG_URL env to use kubernetes" > /dev/stderr
     return 2
   fi
 

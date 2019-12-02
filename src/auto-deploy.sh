@@ -363,8 +363,8 @@ function docker_push_gitlab_to_dockerhub() {
   local GITLAB_IMAGE="$1"
   local DOCKERHUB_IMAGE="$2"
   local TIMESTAMP=`date +%Y%m%d%H%M%S`
-  local SHORT_SHA=$(echo "${CI_COMMIT_SHORT_SHA}" | cut -c1-6)
-  local DOCKERHUB_IMAGE_SNAPSHOT="${DOCKERHUB_IMAGE}_${TIMESTAMP}${SHORT_SHA}"
+  local SHORT_SHA=$(echo "${CI_COMMIT_SHORT_SHA}" | cut -c1-8)
+  local DOCKERHUB_IMAGE_SNAPSHOT="${DOCKERHUB_IMAGE}_${TIMESTAMP}_${SHORT_SHA}"
 
   # Login to Gitlab registry and dockerhub
   docker_login

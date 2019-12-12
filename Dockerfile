@@ -17,9 +17,8 @@ RUN apk --no-cache add -U \
   tar \
   util-linux \
   vim \
-  && curl -sS "https://kubernetes-helm.storage.googleapis.com/helm-v${HELM_VERSION}-linux-amd64.tar.gz" | tar zx \
+  && curl -sS "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" | tar zx \
   && mv linux-amd64/helm   /usr/local/bin/ \
-  && mv linux-amd64/tiller /usr/local/bin/ \
   && curl -sSL -o /usr/local/bin/kubectl "https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" \
   && chmod +x /usr/local/bin/kubectl
 

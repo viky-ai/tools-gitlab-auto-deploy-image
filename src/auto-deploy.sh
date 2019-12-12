@@ -31,7 +31,6 @@ fi
 export RELEASE_NAME="${HELM_RELEASE_NAME:-$CI_ENVIRONMENT_SLUG}"
 export HELM_RELEASE_NAME="${RELEASE_NAME}"
 export KUBE_NAMESPACE="${KUBE_NAMESPACE:-$CI_ENVIRONMENT_SLUG}"
-export TILLER_NAMESPACE="${KUBE_NAMESPACE}"
 export SERVICE_ACCOUNT="${KUBE_NAMESPACE}-service-account"
 export DEPLOY_START_TIME=`date +%s000`
 
@@ -39,7 +38,6 @@ export DEPLOY_START_TIME=`date +%s000`
 function kube_setup() {
   kube_config
   kube_namespace
-  kube_initialize_tiller
   kube_create_pull_secret
   check_version
 }
@@ -48,7 +46,6 @@ export -f kube_setup
 # Remove all resources allocated in kubernetes (delete env)
 function kube_cleanup() {
   kube_delete_helm_release
-  kube_delete_tiller
   kube_delete_resources
   #kube_delete_namespace
 }
@@ -81,16 +78,6 @@ function kube_namespace() {
   kubectl get namespace "${KUBE_NAMESPACE}" > /dev/null 2>&1 || kubectl create namespace "${KUBE_NAMESPACE}" > /dev/null
   kubectl config set-context --current --namespace="${KUBE_NAMESPACE}" > /dev/null
   echo "Kubernetes namespace: $(kubectl get namespace "${KUBE_NAMESPACE}" -o name)"
-}
-
-function kube_initialize_tiller() {
-  export TILLER_SERVICE_ACCOUNT="${TILLER_NAMESPACE}-service-account"
-  kubectl get serviceaccounts -n "${TILLER_NAMESPACE}" "${TILLER_SERVICE_ACCOUNT}" > /dev/null 2>&1 || TILLER_SERVICE_ACCOUNT="default"
-
-  helm init --upgrade --wait --history-max=5 \
-  --tiller-connection-timeout=30 \
-  --service-account "${TILLER_SERVICE_ACCOUNT}" \
-  --tiller-namespace "${TILLER_NAMESPACE}" > /dev/null
 }
 
 function kube_create_pull_secret() {
@@ -137,11 +124,6 @@ function kube_delete_helm_release() {
     helm delete --purge --no-hooks "${RELEASE_NAME}" || true
   fi
   sleep 5
-}
-
-function kube_delete_tiller() {
-  kubectl delete deployment,svc --ignore-not-found --namespace "${KUBE_NAMESPACE}" tiller-deploy || true
-  kubectl delete cm --ignore-not-found --namespace "${KUBE_NAMESPACE}" '*.v*' || true
 }
 
 function kube_delete_resources() {

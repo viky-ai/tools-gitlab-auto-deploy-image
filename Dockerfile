@@ -2,7 +2,7 @@
 #
 FROM docker:stable
 
-ARG HELM_VERSION=2.14.3
+ARG HELM_VERSION=3.0.1
 ARG KUBERNETES_VERSION=1.15.3
 
 # Install Dependencies

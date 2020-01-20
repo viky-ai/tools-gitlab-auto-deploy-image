@@ -3,7 +3,7 @@
 FROM docker:stable
 
 ARG HELM_VERSION=2.16.1
-ARG KUBERNETES_VERSION=1.15.3
+ARG KUBERNETES_VERSION=1.16.5
 
 # Install Dependencies
 RUN apk --no-cache add -U \

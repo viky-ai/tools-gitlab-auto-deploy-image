@@ -2,6 +2,9 @@
 
 A docker image to build docker image and deploy in kubernetes with gitlab.
 
+Notes : since version v2.0, helm 3.0 is required.
+
+
 ## Available commands
 
 - `kubernetes`

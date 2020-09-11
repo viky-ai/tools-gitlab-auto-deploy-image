@@ -118,10 +118,10 @@ function kube_delete_helm_release() {
   if [ "${HELM_ALL_NAMESPACE_RELEASE}" != "" ]
   then
     for r in ${HELM_ALL_NAMESPACE_RELEASE} ; do
-      helm delete --purge --no-hooks "${r}" || true
+      helm uninstall --no-hooks "${r}" || true
     done
   else
-    helm delete --purge --no-hooks "${RELEASE_NAME}" || true
+    helm uninstall --no-hooks "${RELEASE_NAME}" || true
   fi
   sleep 5
 }

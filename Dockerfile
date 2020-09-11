@@ -2,8 +2,8 @@
 #
 FROM docker:stable
 
-ARG HELM_VERSION=3.0.1
-ARG KUBERNETES_VERSION=1.15.3
+ARG HELM_VERSION=3.3.1
+ARG KUBERNETES_VERSION=1.18.8
 
 # Install Dependencies
 RUN apk --no-cache add -U \
@@ -11,7 +11,7 @@ RUN apk --no-cache add -U \
   ca-certificates \
   curl \
   gettext \
-  git\
+  git \
   gzip \
   openssl \
   tar \

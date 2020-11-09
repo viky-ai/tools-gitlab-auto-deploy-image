@@ -2,7 +2,7 @@
 
 A docker image to build docker image and deploy in kubernetes with gitlab.
 
-Notes : since version v2.0, helm 3.0 is required.
+Notes : since tools-gitlab-auto-deploy-image v2.0, helm 3 is required.
 
 
 ## Available commands
@@ -34,9 +34,20 @@ Notes : since version v2.0, helm 3.0 is required.
     pull an image and return full image tag with digest in order to pin image across deployment
   - `docker_gitlab_login`
     log to gitlab registry using `CI_REGISTRY_*`
-  - `docker_login`
+  - `docker_external_login`
+    log to an external registry using
+    - `EXTERNAL_REGISTRY` for registry host or host + namespace, (by default to index.docker.io)
+    - `EXTERNAL_REGISTRY_LOGIN` for login
+    - `EXTERNAL_REGISTRY_PASSWORD` for password
+  - `docker_push_gitlab_to_external`
+    pull docker image from gitlab registry and push it to an external registry (by default to index.docker.io)
+    - `first parameter`
+      This Docker image from Gitlab ex: `docker-registry.example.com/organization/repository:tag`
+    - `second parameter`
+      This Docker image to push to the external registry ex: `organization/repository:tag` or `rg.fr-par.scw.cloud/namespace/repository:tag`
+  - `docker_login` **DEPRECATED use: docker_external_login**
     log to docker registry
-  - `docker_push_gitlab_to_dockerhub`
+  - `docker_push_gitlab_to_dockerhub` **DEPRECATED use: docker_external_login**
     pull docker image from gitlab registry and push it to dockerhub
     - `first parameter`
       This Docker image from Gitlab ex: `docker-registry.example.com/organization/repository:tag`

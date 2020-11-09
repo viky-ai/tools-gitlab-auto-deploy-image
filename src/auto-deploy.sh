@@ -308,7 +308,90 @@ function docker_gitlab_login() {
 }
 export -f docker_gitlab_login
 
+function docker_external_login() {
+  if [ "${EXTERNAL_REGISTRY_LOGIN}" == "" ]
+  then
+    echo "Usage :" > /dev/stderr
+    echo "  docker_external_login" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * env EXTERNAL_REGISTRY_LOGIN is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
+    return 1
+  fi
 
+  if [ "${EXTERNAL_REGISTRY_PASSWORD}" == "" ]
+  then
+    echo "Usage :" > /dev/stderr
+    echo "  docker_external_login" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * env EXTERNAL_REGISTRY_PASSWORD is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
+    return 1
+  fi
+
+  local EXTERNAL_REGISTRY="${EXTERNAL_REGISTRY:-index.docker.io}"
+  local HOSTNAME=`dirname "${EXTERNAL_REGISTRY}"`
+  if ! grep -q "${HOSTNAME}" ~/.docker/config.json ; then
+    echo "Logging to '${EXTERNAL_REGISTRY}' Registry with CI credentials ..." > /dev/stderr
+    echo "${EXTERNAL_REGISTRY_PASSWORD}" | docker login --username "${EXTERNAL_REGISTRY_LOGIN}" --password-stdin > /dev/stderr
+    echo "" > /dev/stderr
+  fi
+}
+export -f docker_external_login
+
+
+function docker_push_gitlab_to_external() {
+  # $1 = gitlab registry to be pulled
+  # $2 = external_image to be pushed
+  if [ "$1" == "" ]
+  then
+    echo "Usage :" > /dev/stderr
+    echo "  docker_push_gitlab_to_external gitlab_image external_image" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * gitlab_image to be pulled is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
+    return 1
+  fi
+
+  if [ "$2" == "" ]
+  then
+    echo "Usage :" > /dev/stderr
+    echo "  docker_push_gitlab_to_external gitlab_image external_image" > /dev/stderr
+    echo "" > /dev/stderr
+    echo " * external_image to be pushed is mandatory" > /dev/stderr
+    echo "" > /dev/stderr
+    return 1
+  fi
+
+  local GITLAB_IMAGE="$1"
+  local EXTERNAL_IMAGE="$2"
+  local TIMESTAMP=`date +%Y%m%d%H%M%S`
+  local SHORT_SHA=$(echo "${CI_COMMIT_SHORT_SHA}" | cut -c1-8)
+  local EXTERNAL_IMAGE_SNAPSHOT="${EXTERNAL_IMAGE}_${TIMESTAMP}_${SHORT_SHA}"
+
+  # Login to Gitlab registry and external registry
+  docker_external_login
+  docker_gitlab_login
+
+  # Pull from Gitlab
+  docker pull "${GITLAB_IMAGE}"
+  # Tag to Dockerhub
+  docker tag "${GITLAB_IMAGE}" "${EXTERNAL_IMAGE}"
+  # Push to Dockerhub
+  docker push "${EXTERNAL_IMAGE}"
+
+  if [ "$EXTERNAL_IMAGE_SNAPSHOT" != "" ]
+  then
+    # Tag to Dockerhub
+    docker tag "${GITLAB_IMAGE}" "${EXTERNAL_IMAGE_SNAPSHOT}"
+    # Push to Dockerhub
+    docker push "${EXTERNAL_IMAGE_SNAPSHOT}"
+  fi
+
+}
+export -f docker_push_gitlab_to_external
+
+# deprecated : use docker_external_login
 function docker_login() {
   if ! grep -q "index.docker.io" ~/.docker/config.json ; then
     echo "Logging to Docker Registry with CI credentials ..." > /dev/stderr
@@ -318,7 +401,7 @@ function docker_login() {
 }
 export -f docker_login
 
-
+# deprecated : user docker_push_gitlab_to_external
 function docker_push_gitlab_to_dockerhub() {
   # $1 = gitlab registry to be pulled
   # $2 = dockerhub image to be pushed

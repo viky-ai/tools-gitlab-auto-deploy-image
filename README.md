@@ -15,7 +15,7 @@ Notes : since tools-gitlab-auto-deploy-image v2.0, helm 3 is required.
     - namespace is created using `KUBE_NAMESPACE` environment variable (if not in gitlab managed cluster)
     - `kubectl` default namespace is set to `KUBE_NAMESPACE`
     - `helm` is initialized with a `tiller` service is the current namespace
-    - a pull secret is created named `gitlab-registry`
+    - a pull secret is created named `gitlab-registry` using gitlab ci default variables or named from env `K8S_IMAGE_PULL_SECRET_REGISTRY` using `EXTERNAL_REGISTRY*` env.
   - `kube_cleanup`
     delete a kubernetes environment
     - remove all `helm` release installation in the current namespace

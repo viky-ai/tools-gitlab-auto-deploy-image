@@ -39,6 +39,7 @@ function kube_setup() {
   kube_config
   kube_namespace
   kube_create_pull_secret
+  kube_create_external_pull_secret
   check_version
 }
 export -f kube_setup
@@ -87,6 +88,11 @@ function kube_create_pull_secret() {
     return
   fi
 
+  if [ "$K8S_IMAGE_PULL_SECRET_REGISTRY" != "" ]
+  then
+    return
+  fi
+
   echo "Creating pull secret ..."
   if [ "${CI_REGISTRY_USER}" == "" ]
   then
@@ -110,7 +116,44 @@ function kube_create_pull_secret() {
   --docker-username="${CI_DEPLOY_USER:-$CI_REGISTRY_USER}" \
   --docker-password="${CI_DEPLOY_PASSWORD:-$CI_REGISTRY_PASSWORD}" \
   --docker-email="${GITLAB_USER_EMAIL}" \
-  -o yaml --dry-run | kubectl replace -n "${KUBE_NAMESPACE}" --force -f -
+  -o yaml --dry-run=client | kubectl replace -n "${KUBE_NAMESPACE}" --force -f -
+}
+
+function kube_create_external_pull_secret() {
+
+  if [ "$CI_PROJECT_VISIBILITY" == "public" ]
+  then
+    return
+  fi
+
+  if [ "$K8S_IMAGE_PULL_SECRET_REGISTRY" == "" ]
+  then
+    return
+  fi
+
+  echo "Creating pull secret ..."
+  if [ "${EXTERNAL_REGISTRY}" == "" ]
+  then
+    echo "You must set EXTERNAL_REGISTRY env to use kubernetes" > /dev/stderr
+    return 1
+  fi
+  if [ "${EXTERNAL_REGISTRY_LOGIN}" == "" ]
+  then
+    echo "You must set EXTERNAL_REGISTRY_LOGIN env to use kubernetes" > /dev/stderr
+    return 1
+  fi
+  if [ "${EXTERNAL_REGISTRY_PASSWORD}" == "" ]
+  then
+    echo "You must set EXTERNAL_REGISTRY_PASSWORD env to use kubernetes" > /dev/stderr
+    return 1
+  fi
+
+  kubectl create secret -n "${KUBE_NAMESPACE}" \
+  docker-registry "${K8S_IMAGE_PULL_SECRET_REGISTRY}" \
+  --docker-server="${EXTERNAL_REGISTRY}" \
+  --docker-username="${EXTERNAL_REGISTRY_LOGIN}" \
+  --docker-password="${EXTERNAL_REGISTRY_PASSWORD}" \
+  -o yaml --dry-run=client | kubectl replace -n "${KUBE_NAMESPACE}" --force -f -
 }
 
 function kube_delete_helm_release() {

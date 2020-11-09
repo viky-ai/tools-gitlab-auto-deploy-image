@@ -333,7 +333,7 @@ function docker_external_login() {
   local HOSTNAME=`dirname "${EXTERNAL_REGISTRY}"`
   if ! grep -q "${HOSTNAME}" ~/.docker/config.json ; then
     echo "Logging to '${EXTERNAL_REGISTRY}' Registry with CI credentials ..." > /dev/stderr
-    echo "${EXTERNAL_REGISTRY_PASSWORD}" | docker login --username "${EXTERNAL_REGISTRY_LOGIN}" --password-stdin > /dev/stderr
+    echo "${EXTERNAL_REGISTRY_PASSWORD}" | docker login "${EXTERNAL_REGISTRY}" --username "${EXTERNAL_REGISTRY_LOGIN}" --password-stdin > /dev/stderr
     echo "" > /dev/stderr
   fi
 }

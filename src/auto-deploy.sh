@@ -323,8 +323,9 @@ function docker_tag_latest() {
   # login to private registry
   docker_gitlab_login
 
+  local LATEST_TAG=$2
   local CI_DOCKER_IMAGE="$1:${CI_COMMIT_REF_SLUG:-latest}"
-  local CI_DOCKER_IMAGE_LATEST="$1:latest"
+  local CI_DOCKER_IMAGE_LATEST="$1:${LATEST_TAG:-latest}"
 
   echo "Pulling ${CI_DOCKER_IMAGE} ..."
   local CI_DOCKER_IMAGE_FULL=$(docker pull -q "${CI_DOCKER_IMAGE}")

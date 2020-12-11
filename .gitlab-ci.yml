@@ -1,0 +1,28 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: docker:stable
+  tags:
+      - kubernetes
+  script:
+    - |
+      # Init docker build
+      export DOCKER_TLS_CERTDIR=""
+      if [ "${DOCKER_HOST}" == "" ]
+      then
+        # Use DooD (dooker out of doker) if dood service exist
+        if [ "${DOOD_PORT}" != "" ]
+        then
+          export DOCKER_HOST="${DOOD_PORT}"
+        fi
+      fi
+      if [ "${DOCKER_HOST}" == "" ]
+      then
+        echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
+        exit 2
+      fi
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  .
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"

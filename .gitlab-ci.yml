@@ -23,6 +23,12 @@ build:
         echo "DOCKER_HOST en must be set to use docker." > /dev/stderr
         exit 2
       fi
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  .
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    - |
+      # Compute docker tag
+      DOCKER_TAG="${CI_COMMIT_TAG/v/}"
+      DOCKER_TAG=${DOCKER_TAG:-$CI_COMMIT_REF_SLUG}
+    - docker build --pull -t "${CI_REGISTRY_IMAGE}:${DOCKER_TAG}"  .
+    - |
+      # Docker login
+      echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+    - docker push "${CI_REGISTRY_IMAGE}:${DOCKER_TAG}"
